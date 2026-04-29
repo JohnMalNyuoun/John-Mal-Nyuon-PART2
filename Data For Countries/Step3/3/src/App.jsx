@@ -43,24 +43,36 @@ const App = () => {
     return iconMap[code] || '🌡️'
   }
 
+  // 1. Fetch all countries on component mount
   useEffect(() => {
     axios.get('https://studies.cs.helsinki.fi/restcountries/api/all')
-      .then(response => setCountries(response.data))
-      .catch(() => setErrorCountries('Failed to fetch countries'))
-      .finally(() => setLoadingCountries(false))
+      .then(response => {
+        setCountries(response.data)
+      })
+      .catch(() => {
+        setErrorCountries('Failed to fetch countries')
+      })
+      .finally(() => {
+        setLoadingCountries(false)
+      })
   }, [])
 
-  
+  // 2. Fetch weather when a country is selected
   useEffect(() => {
-    if (selectedCountry && selectedCountry.capital) {
+    if (selectedCountry && selectedCountry.capital && selectedCountry.capital.length > 0) {
       const capitalCity = selectedCountry.capital[0]
 
       setLoadingWeather(true)
       setErrorWeather(null)
       setWeather(null)
 
+<<<<<<< HEAD
       // First, get coordinates for the city using geocoding API
       axios.get('https://geocoding-api.open-meteo.com/v1/search', {
+=======
+      // CORRECTED: Clean URL. Parameters are handled entirely by the 'params' object.
+      axios.get('https://api.openweathermap.org/data/2.5/weather', {
+>>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
         params: {
           name: capitalCity,
           count: 1,
@@ -85,6 +97,7 @@ const App = () => {
           throw new Error('City not found')
         }
       })
+<<<<<<< HEAD
       .then(weatherResponse => {
         setWeather({
           name: capitalCity,
@@ -93,6 +106,11 @@ const App = () => {
       })
       .catch((error) => {
         console.error('Weather API Error:', error)
+=======
+      .catch((err) => {
+        console.error("Weather API Error:", err.response?.data || err.message)
+        setErrorWeather('Failed to fetch weather data')
+>>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
       })
       .finally(() => {
         setLoadingWeather(false)
@@ -100,73 +118,85 @@ const App = () => {
     }
   }, [selectedCountry])
 
-  
+  // Handle searching
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value)
+    setSelectedCountry(null) // Reset selection when user types a new search
+  }
+
   const handleCountrySelect = (country) => {
     setSelectedCountry(country)
   }
 
-  
+  // Filter logic
   const filteredCountries = countries.filter(country =>
     country.name?.common?.toLowerCase().includes(searchTerm.toLowerCase().trim())
   )
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial' }}>
-      <h1>Countries Search</h1>
+    <div style={{ padding: '20px', fontFamily: 'Arial', maxWidth: '800px', margin: '0 auto' }}>
+      <h1>World Explorer & Weather</h1>
 
       <input
         type="text"
         placeholder="Search for a country..."
         value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value)
-          setSelectedCountry(null)
-        }}
-        style={{ padding: '8px', width: '300px', marginBottom: '20px' }}
+        onChange={handleSearchChange}
+        style={{ padding: '10px', width: '100%', marginBottom: '20px', fontSize: '16px' }}
       />
 
-  
-      {loadingCountries && <p>Loading countries...</p>}
+      {loadingCountries && <p>Loading country list...</p>}
       {errorCountries && <p style={{ color: 'red' }}>{errorCountries}</p>}
 
+<<<<<<< HEAD
       
       {!loadingCountries && !errorCountries && searchTerm && (
+=======
+      {/* List of filtered countries */}
+      {!selectedCountry && !loadingCountries && (
+>>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
         <ul style={{ listStyle: 'none', padding: 0 }}>
-          {filteredCountries.map(country => (
-            <li
-              key={country.cca3}
-              style={{
-                marginBottom: '10px',
-                padding: '10px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <span>{country.name.common}</span>
-              <button
-                onClick={() => handleCountrySelect(country)}
+          {filteredCountries.length > 10 ? (
+            <p>Too many matches, please specify your search.</p>
+          ) : (
+            filteredCountries.map(country => (
+              <li
+                key={country.cca3}
                 style={{
-                  padding: '6px 12px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
+                  marginBottom: '10px',
+                  padding: '10px',
+                  border: '1px solid #ddd',
                   borderRadius: '4px',
-                  cursor: 'pointer'
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
                 }}
               >
-                Show Details
-              </button>
-            </li>
-          ))}
+                <span>{country.name.common}</span>
+                <button
+                  onClick={() => handleCountrySelect(country)}
+                  style={{
+                    padding: '6px 12px',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Show Details
+                </button>
+              </li>
+            ))
+          )}
         </ul>
       )}
 
-      
+      {/* Detailed Country View */}
       {selectedCountry && (
-        <div style={{ marginTop: '20px', borderTop: '1px solid #ccc', paddingTop: '20px' }}>
+        <div style={{ marginTop: '20px', border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
+          <button onClick={() => setSelectedCountry(null)}>Back to list</button>
+          
           <h2>{selectedCountry.name.common}</h2>
           <p><strong>Capital:</strong> {selectedCountry.capital?.[0] || 'N/A'}</p>
           <p><strong>Region:</strong> {selectedCountry.region}</p>
@@ -175,9 +205,10 @@ const App = () => {
           <img
             src={selectedCountry.flags.png}
             alt={`Flag of ${selectedCountry.name.common}`}
-            style={{ width: '150px', marginTop: '10px' }}
+            style={{ width: '150px', marginTop: '10px', border: '1px solid #eee' }}
           />
 
+<<<<<<< HEAD
           
           {loadingWeather && <p>Loading weather...</p>}
 
@@ -197,6 +228,30 @@ const App = () => {
               <p><strong>Wind Speed:</strong> {weather.wind_speed_10m} km/h</p>
             </div>
           )}
+=======
+          <hr style={{ margin: '20px 0' }} />
+
+          {/* Weather Section */}
+          <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
+            <h3>Weather in {selectedCountry.capital?.[0]}</h3>
+            
+            {loadingWeather && <p>Fetching current weather...</p>}
+            {errorWeather && <p style={{ color: 'red' }}>{errorWeather}</p>}
+
+            {weather && (
+              <div>
+                <p><strong>Temperature:</strong> {weather.main.temp}°C</p>
+                <p><strong>Condition:</strong> {weather.weather[0].description}</p>
+                <img 
+                  src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} 
+                  alt="weather icon" 
+                />
+                <p><strong>Wind Speed:</strong> {weather.wind.speed} m/s</p>
+                <p><strong>Humidity:</strong> {weather.main.humidity}%</p>
+              </div>
+            )}
+          </div>
+>>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
         </div>
       )}
     </div>
