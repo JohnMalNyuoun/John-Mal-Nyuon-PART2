@@ -12,7 +12,36 @@ const App = () => {
   const [loadingWeather, setLoadingWeather] = useState(false)
   const [errorWeather, setErrorWeather] = useState(null)
 
-  const apiKey = import.meta.env.VITE_WEATHER_API
+  // Map weather codes to weather icons
+  const getWeatherIcon = (code) => {
+    const iconMap = {
+      0: '☀️', // Clear sky
+      1: '🌤️', // Mainly clear
+      2: '⛅', // Partly cloudy
+      3: '☁️', // Overcast
+      45: '🌫️', // Foggy
+      48: '🌫️', // Foggy
+      51: '🌧️', // Drizzle
+      53: '🌧️', // Drizzle
+      55: '🌧️', // Drizzle
+      61: '🌧️', // Rain
+      63: '🌧️', // Rain
+      65: '⛈️', // Heavy rain
+      71: '🌨️', // Snow
+      73: '🌨️', // Snow
+      75: '🌨️', // Snow
+      77: '🌨️', // Snow
+      80: '🌦️', // Rain showers
+      81: '⛈️', // Rain showers
+      82: '⛈️', // Rain showers
+      85: '❄️', // Snow showers
+      86: '❄️', // Snow showers
+      95: '⛈️', // Thunderstorm
+      96: '⛈️', // Thunderstorm
+      99: '⛈️' // Thunderstorm
+    }
+    return iconMap[code] || '🌡️'
+  }
 
   useEffect(() => {
     axios.get('https://studies.cs.helsinki.fi/restcountries/api/all')
@@ -30,24 +59,46 @@ const App = () => {
       setErrorWeather(null)
       setWeather(null)
 
-      axios.get('https://api.openweathermap.org/data/2.5/weather?q={capitalCity}&appid={apiKey}&units=metric', {
+      // First, get coordinates for the city using geocoding API
+      axios.get('https://geocoding-api.open-meteo.com/v1/search', {
         params: {
-          q: capitalCity,
-          appid: apiKey,
-          units: 'metric'
+          name: capitalCity,
+          count: 1,
+          language: 'en',
+          format: 'json'
         }
       })
-      .then(response => {
-        setWeather(response.data)
+      .then(geoResponse => {
+        if (geoResponse.data.results && geoResponse.data.results.length > 0) {
+          const { latitude, longitude } = geoResponse.data.results[0]
+
+          // Now get weather using coordinates
+          return axios.get('https://api.open-meteo.com/v1/forecast', {
+            params: {
+              latitude,
+              longitude,
+              current: 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m',
+              temperature_unit: 'celsius'
+            }
+          })
+        } else {
+          throw new Error('City not found')
+        }
       })
-      .catch(() => {
-        setErrorWeather('Failed to fetch weather')
+      .then(weatherResponse => {
+        setWeather({
+          name: capitalCity,
+          ...weatherResponse.data.current
+        })
+      })
+      .catch((error) => {
+        console.error('Weather API Error:', error)
       })
       .finally(() => {
         setLoadingWeather(false)
       })
     }
-  }, [selectedCountry, apiKey])
+  }, [selectedCountry])
 
   
   const handleCountrySelect = (country) => {
@@ -79,7 +130,7 @@ const App = () => {
       {errorCountries && <p style={{ color: 'red' }}>{errorCountries}</p>}
 
       
-      {!loadingCountries && !errorCountries && (
+      {!loadingCountries && !errorCountries && searchTerm && (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {filteredCountries.map(country => (
             <li
@@ -129,21 +180,21 @@ const App = () => {
 
           
           {loadingWeather && <p>Loading weather...</p>}
-          {errorWeather && <p style={{ color: 'red' }}>{errorWeather}</p>}
 
-          {weather && !loadingWeather && !errorWeather && (
+          {weather && !loadingWeather && (
             <div style={{
               marginTop: '15px',
               padding: '15px',
               backgroundColor: '#f0f0f0',
               borderRadius: '4px'
             }}>
-              <h3>Weather in {weather.name}</h3>
-              <p><strong>Temperature:</strong> {weather.main.temp}°C</p>
-              <p><strong>Feels Like:</strong> {weather.main.feels_like}°C</p>
-              <p><strong>Weather:</strong> {weather.weather[0].description}</p>
-              <p><strong>Humidity:</strong> {weather.main.humidity}%</p>
-              <p><strong>Wind Speed:</strong> {weather.wind.speed} m/s</p>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '32px' }}>{getWeatherIcon(weather.weather_code)}</span>
+                Weather in {weather.name}
+              </h3>
+              <p><strong>Temperature:</strong> {weather.temperature_2m}°C</p>
+              <p><strong>Humidity:</strong> {weather.relative_humidity_2m}%</p>
+              <p><strong>Wind Speed:</strong> {weather.wind_speed_10m} km/h</p>
             </div>
           )}
         </div>
