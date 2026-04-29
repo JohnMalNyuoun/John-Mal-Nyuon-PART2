@@ -66,13 +66,8 @@ const App = () => {
       setErrorWeather(null)
       setWeather(null)
 
-<<<<<<< HEAD
       // First, get coordinates for the city using geocoding API
       axios.get('https://geocoding-api.open-meteo.com/v1/search', {
-=======
-      // CORRECTED: Clean URL. Parameters are handled entirely by the 'params' object.
-      axios.get('https://api.openweathermap.org/data/2.5/weather', {
->>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
         params: {
           name: capitalCity,
           count: 1,
@@ -97,7 +92,6 @@ const App = () => {
           throw new Error('City not found')
         }
       })
-<<<<<<< HEAD
       .then(weatherResponse => {
         setWeather({
           name: capitalCity,
@@ -106,11 +100,6 @@ const App = () => {
       })
       .catch((error) => {
         console.error('Weather API Error:', error)
-=======
-      .catch((err) => {
-        console.error("Weather API Error:", err.response?.data || err.message)
-        setErrorWeather('Failed to fetch weather data')
->>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
       })
       .finally(() => {
         setLoadingWeather(false)
@@ -148,13 +137,7 @@ const App = () => {
       {loadingCountries && <p>Loading country list...</p>}
       {errorCountries && <p style={{ color: 'red' }}>{errorCountries}</p>}
 
-<<<<<<< HEAD
-      
       {!loadingCountries && !errorCountries && searchTerm && (
-=======
-      {/* List of filtered countries */}
-      {!selectedCountry && !loadingCountries && (
->>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {filteredCountries.length > 10 ? (
             <p>Too many matches, please specify your search.</p>
@@ -196,7 +179,7 @@ const App = () => {
       {selectedCountry && (
         <div style={{ marginTop: '20px', border: '1px solid #ccc', padding: '20px', borderRadius: '8px' }}>
           <button onClick={() => setSelectedCountry(null)}>Back to list</button>
-          
+
           <h2>{selectedCountry.name.common}</h2>
           <p><strong>Capital:</strong> {selectedCountry.capital?.[0] || 'N/A'}</p>
           <p><strong>Region:</strong> {selectedCountry.region}</p>
@@ -208,8 +191,6 @@ const App = () => {
             style={{ width: '150px', marginTop: '10px', border: '1px solid #eee' }}
           />
 
-<<<<<<< HEAD
-          
           {loadingWeather && <p>Loading weather...</p>}
 
           {weather && !loadingWeather && (
@@ -228,30 +209,6 @@ const App = () => {
               <p><strong>Wind Speed:</strong> {weather.wind_speed_10m} km/h</p>
             </div>
           )}
-=======
-          <hr style={{ margin: '20px 0' }} />
-
-          {/* Weather Section */}
-          <div style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px' }}>
-            <h3>Weather in {selectedCountry.capital?.[0]}</h3>
-            
-            {loadingWeather && <p>Fetching current weather...</p>}
-            {errorWeather && <p style={{ color: 'red' }}>{errorWeather}</p>}
-
-            {weather && (
-              <div>
-                <p><strong>Temperature:</strong> {weather.main.temp}°C</p>
-                <p><strong>Condition:</strong> {weather.weather[0].description}</p>
-                <img 
-                  src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} 
-                  alt="weather icon" 
-                />
-                <p><strong>Wind Speed:</strong> {weather.wind.speed} m/s</p>
-                <p><strong>Humidity:</strong> {weather.main.humidity}%</p>
-              </div>
-            )}
-          </div>
->>>>>>> 16b2e24f1efcab00b0e2b67592dcee65a4e426fb
         </div>
       )}
     </div>
